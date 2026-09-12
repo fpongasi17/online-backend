@@ -25,10 +25,15 @@ app.get("/", async (req, res) => {
 });
 
 // User routes
-app.use("/users", userRoutes);
+app.use("/api/users", userRoutes);
 
-const PORT = process.env.PORT || 3000;
+// ONLY listen on port if running locally
+if (process.env.NODE_ENV !== "production") {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// CRUCIAL FOR VERCEL: Export the express app
+module.exports = app;
