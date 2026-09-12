@@ -34,9 +34,7 @@ const getUserById = async (req, res) => {
 
 // CREATE user
 const createUser = async (req, res) => {
-
     try {
-
         const {
             user_login,
             user_pass,
@@ -50,7 +48,26 @@ const createUser = async (req, res) => {
             isActive
         } = req.body;
 
+        // Basic validation for required fields
+        if (!user_login || !user_pass) {
+            return res.status(400).json({ error: "Username and Password are required." });
+        }
+
         const hashedPassword = await bcrypt.hash(user_pass, 10);
+
+        // Map fields and assign default values to avoid 'undefined' errors with Turso DB
+        const args = [
+            user_login ?? "",
+            hashedPassword ?? "",
+            fname ?? "",
+            lname ?? "",
+            gender ?? "Unspecified",
+            user_level ?? "user",
+            branch_cd ?? "MAIN",
+            email ?? "",
+            user_activation_key ?? "",
+            isActive ?? 1
+        ];
 
         await db.execute({
             sql: `
@@ -69,31 +86,21 @@ const createUser = async (req, res) => {
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
-            args: [
-                user_login,
-                hashedPassword,
-                fname,
-                lname,
-                gender,
-                user_level,
-                branch_cd,
-                email,
-                user_activation_key,
-                isActive
-            ]
+            args: args
         });
 
         res.status(201).json({
+            success: true,
             message: "User created successfully"
         });
 
     } catch (err) {
+        console.error("Registration Error:", err);
         res.status(500).json({
             error: err.message
         });
     }
 };
-
 
 // UPDATE user
 const updateUser = async (req, res) => {
@@ -126,14 +133,14 @@ const updateUser = async (req, res) => {
                 WHERE user_id = ?
             `,
             args: [
-                user_login,
-                fname,
-                lname,
-                gender,
-                user_level,
-                branch_cd,
-                email,
-                isActive,
+                user_login ?? "",
+                fname ?? "",
+                lname ?? "",
+                gender ?? "",
+                user_level ?? "user",
+                branch_cd ?? "MAIN",
+                email ?? "",
+                isActive ?? 1,
                 id
             ]
         });
@@ -161,7 +168,6 @@ const deleteUser = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
 
 module.exports = {
     getUsers,
